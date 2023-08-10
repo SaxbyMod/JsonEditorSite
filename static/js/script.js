@@ -76,3 +76,16 @@ function uploadSchema() {
         alert("Error uploading schema.");
     });
 }
+function saveAs() {
+    const filename = prompt("Enter filename:", "data.json");
+    if (filename) {
+        const content = editor.get();
+        const blob = new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename.endsWith('.json') ? filename : filename + '.json';
+        a.click();
+    }
+}
