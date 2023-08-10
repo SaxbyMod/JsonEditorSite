@@ -4,9 +4,9 @@ let container = document.getElementById("jsoneditor");
 let currentSchema = null;  // Holds the uploaded schema
 
 let options = {
-    schema: currentSchema,  // Set the schema for validation
+    schema: currentSchema,
     onChange: function () {
-        if (editor.validate().length == 0) {  // If no errors
+        if (editor.validate().length == 0) {
             container.style.border = "";
         } else {
             container.style.border = "1px solid red";
@@ -36,26 +36,14 @@ function upload() {
 }
 
 function download() {
-    const content = JSON.stringify(editor.get(), null, 2);
-    fetch('/download', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({content: content}),
-    })
-    .then(response => response.json())
-    .then(data => {
-        const a = document.createElement('a');
-        a.href = data.download_url;
-        a.download = "saved_file.json";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    })
-    .catch(error => {
-        console.error('Error:', error);
-    });
+    const content = editor.get();
+    const blob = new Blob([JSON.stringify(content, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.json';
+    a.click();
 }
 
 function uploadSchema() {
@@ -71,8 +59,17 @@ function uploadSchema() {
     .then(response => response.json())
     .then(data => {
         currentSchema = JSON.parse(data.schema);
-        editor.setSchema(currentSchema);  // Update the editor's schema
-        alert("Schema uploaded successfully!");
+        editor.setSchema(currentSchema);
+
+        let currentJSON = editor.get();
+        for (let property in currentSchema.properties) {
+            if (!currentJSON.hasOwnProperty(property)) {
+                currentJSON[property] = null;
+            }
+        }
+        editor.set(currentJSON);
+
+        alert("Schema uploaded and missing fields added successfully!");
     })
     .catch(error => {
         console.error('Error:', error);
